@@ -149,12 +149,12 @@
         .compare-card .res-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #eee; padding-top: 5px; margin-top: auto; }
         .compare-card .diff-row { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-size: 11px; font-weight: 800; letter-spacing: -0.5px; }
         
-        .compare-card .prefix { font-size: 10.5px; color: #555; font-weight: 700; text-decoration: none; text-align: left; letter-spacing: -0.5px; white-space: nowrap; }
+        .compare-card .prefix { font-size: 10.5px; color: #555; font-weight: 700; text-decoration: none; text-align: left; letter-spacing: -0.5px; white-space: normal; word-break: keep-all; line-height: 1.2; padding-right: 4px; }
         .compare-card .plan-num { font-size: 11px; color: #777; text-decoration: line-through; text-align: right; font-weight: 600; white-space: nowrap; }
         .compare-card .disc-num { font-size: 11px; color: #333; font-weight: 700; text-align: right; letter-spacing: -0.5px; white-space: nowrap; }
         .compare-card .disc-num.magenta { color: var(--uplus-magenta); font-weight: 800; }
         .compare-card .res-num { font-size: 14px; font-weight: 900; color: #000; letter-spacing: -0.5px; text-align: right; white-space: nowrap; }
-        .compare-card .diff-row span { white-space: nowrap; }
+        .compare-card .diff-row span { white-space: normal; word-break: keep-all; text-align: right; line-height: 1.2; }
         
         .modal-summary { background: #1D1D1D; color: white; padding: 10px 15px; border-radius: 12px; text-align: center; margin-top: 10px; }
         .modal-summary .label { font-size: 14px; color: #ffffff; font-weight: 800; display: block; margin-bottom: 2px; }
@@ -167,17 +167,19 @@
             .modal-content { max-width: 900px; }
         }
 
-        /* 모바일 모드 대응: 좁은 화면에서 텍스트 줄바꿈 방지 및 폭에 맞춘 자동 축소 */
+        /* 모바일 모드 대응: 강제 축소를 없애고 가로 스크롤 허용하여 텍스트 겹침 및 벗어남 완벽 방지 (캡처 정상 작동) */
         @media (max-width: 600px) {
-            .compare-card { padding: 6px 3px; }
-            .compare-card .name { font-size: min(13px, 3.4vw); margin-bottom: 4px; padding-bottom: 4px; }
-            .compare-card .prefix { font-size: min(10.5px, 2.3vw); letter-spacing: -1px; }
-            .compare-card .plan-num { font-size: min(11px, 2.5vw); }
-            .compare-card .disc-num { font-size: min(11px, 2.5vw); }
-            .compare-card .res-num { font-size: min(14px, 3.2vw); }
-            .compare-card .diff-row { font-size: min(11px, 2.4vw); margin-top: 4px; }
-            .compare-card .row { margin-bottom: 2px; gap: 1px; }
-            .compare-card .res-row { margin-top: 4px; padding-top: 4px; }
+            .modal-body { overflow-x: auto; padding: 15px 10px; -webkit-overflow-scrolling: touch; }
+            #captureArea { min-width: 600px; padding-bottom: 5px; }
+            
+            .compare-card { padding: 8px 4px; }
+            .compare-card .name { font-size: 12.5px; margin-bottom: 4px; padding-bottom: 4px; }
+            .compare-card .prefix { font-size: 10px; letter-spacing: -0.5px; padding-right: 2px; }
+            .compare-card .plan-num, .compare-card .disc-num { font-size: 10.5px; }
+            .compare-card .res-num { font-size: 13px; }
+            .compare-card .diff-row { font-size: 10px; margin-top: 4px; }
+            .compare-card .row { margin-bottom: 3px; gap: 2px; }
+            .compare-card .res-row { margin-top: 5px; padding-top: 5px; }
         }
     </style>
 </head>
