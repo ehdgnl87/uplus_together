@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>U+ 결합할인 시뮬레이터</title>
     <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --uplus-magenta: #E6007E;
@@ -23,7 +24,7 @@
         * { box-sizing: border-box; font-family: 'Pretendard', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--uplus-gray-light); margin: 0; padding: 0; color: var(--uplus-dark); line-height: 1.4; }
         
-        .container { max-width: 600px; margin: 0 auto; background: var(--white); min-height: 100vh; padding-bottom: 180px; position: relative; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--white); min-height: 100vh; padding-bottom: 100px; position: relative; }
         
         header { 
             padding: 25px 20px; 
@@ -49,6 +50,13 @@
         }
         .horizontal-scroll::-webkit-scrollbar { height: 4px; }
         .horizontal-scroll::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+        /* 설정 토글 라디오 및 수기입력창 */
+        .toggle-group { display: flex; background: #eee; padding: 2px; border-radius: 6px; font-size: 11px; }
+        .toggle-group label { padding: 4px 8px; cursor: pointer; border-radius: 4px; font-weight: 600; color: #777; margin: 0; }
+        .toggle-group input { display: none; }
+        .toggle-group input:checked + label { background: var(--white); color: var(--uplus-magenta); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .manual-input { border: 1px solid var(--uplus-magenta) !important; color: var(--uplus-magenta) !important; font-weight: 800 !important; height: 28px !important; margin-bottom: 4px; }
 
         .member-col {
             flex: 0 0 185px; scroll-snap-align: start;
@@ -132,23 +140,24 @@
         .compare-section.tog .compare-section-title { background: var(--uplus-pink); color: var(--uplus-magenta); }
         
         .compare-grid { display: flex; gap: 4px; justify-content: center; overflow-x: hidden; padding-bottom: 5px; }
-        .compare-card { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 4px; text-align: center; min-width: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .compare-card { flex: 1; background: #fff; border: 1px solid #ddd; border-radius: 6px; padding: 8px 4px; text-align: center; min-width: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; flex-direction: column; }
         .compare-card.tog-card { border-color: #fbcce0; background: #fffafc; }
-        .compare-card .name { font-size: 11px; font-weight: 800; color: #333; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .compare-card .name { font-size: 13px; font-weight: 900; color: #000; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 4px; }
         
         /* 모달 내 명칭 및 폰트 개선 - 좌우 정렬 및 크기 확대 */
         .compare-card .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .compare-card .res-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #eee; padding-top: 5px; margin-top: 5px; }
+        .compare-card .res-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #eee; padding-top: 5px; margin-top: auto; }
         .compare-card .diff-row { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-size: 11px; font-weight: 800; letter-spacing: -0.5px; }
         
         .compare-card .prefix { font-size: 10.5px; color: #555; font-weight: 700; text-decoration: none; text-align: left; letter-spacing: -0.5px; white-space: nowrap; }
-        .compare-card .plan-num { font-size: 11px; color: #777; text-decoration: line-through; text-align: right; font-weight: 600; }
-        .compare-card .disc-num { font-size: 11px; color: #333; font-weight: 700; text-align: right; letter-spacing: -0.5px; }
+        .compare-card .plan-num { font-size: 11px; color: #777; text-decoration: line-through; text-align: right; font-weight: 600; white-space: nowrap; }
+        .compare-card .disc-num { font-size: 11px; color: #333; font-weight: 700; text-align: right; letter-spacing: -0.5px; white-space: nowrap; }
         .compare-card .disc-num.magenta { color: var(--uplus-magenta); font-weight: 800; }
-        .compare-card .res-num { font-size: 14px; font-weight: 900; color: #000; letter-spacing: -0.5px; text-align: right; }
+        .compare-card .res-num { font-size: 14px; font-weight: 900; color: #000; letter-spacing: -0.5px; text-align: right; white-space: nowrap; }
+        .compare-card .diff-row span { white-space: nowrap; }
         
-        .modal-summary { background: #1D1D1D; color: white; padding: 15px; border-radius: 12px; text-align: center; margin-top: 10px; }
-        .modal-summary .label { font-size: 12px; color: #aaa; display: block; margin-bottom: 5px; }
+        .modal-summary { background: #1D1D1D; color: white; padding: 10px 15px; border-radius: 12px; text-align: center; margin-top: 10px; }
+        .modal-summary .label { font-size: 14px; color: #ffffff; font-weight: 800; display: block; margin-bottom: 2px; }
         .modal-summary .amount { font-size: 22px; font-weight: 900; }
 
         /* PC 모드 대응: 넓은 화면에서 5인 모두 한 화면에 보이도록 폭 확장 */
@@ -157,13 +166,26 @@
             .bottom-sheet { max-width: 1050px; }
             .modal-content { max-width: 900px; }
         }
+
+        /* 모바일 모드 대응: 좁은 화면에서 텍스트 줄바꿈 방지 및 폭에 맞춘 자동 축소 */
+        @media (max-width: 600px) {
+            .compare-card { padding: 6px 3px; }
+            .compare-card .name { font-size: min(13px, 3.4vw); margin-bottom: 4px; padding-bottom: 4px; }
+            .compare-card .prefix { font-size: min(10.5px, 2.3vw); letter-spacing: -1px; }
+            .compare-card .plan-num { font-size: min(11px, 2.5vw); }
+            .compare-card .disc-num { font-size: min(11px, 2.5vw); }
+            .compare-card .res-num { font-size: min(14px, 3.2vw); }
+            .compare-card .diff-row { font-size: min(11px, 2.4vw); margin-top: 4px; }
+            .compare-card .row { margin-bottom: 2px; gap: 1px; }
+            .compare-card .res-row { margin-top: 4px; padding-top: 4px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>U+ 결합 비교 시뮬레이터</h1>
+        <h1>U+투게더 결합 시뮬레이터</h1>
         <p>각 구성원의 약정 및 결합 할인 혜택을 상세히 비교해 보세요.</p>
     </header>
 
@@ -190,32 +212,28 @@
 
     <!-- 3. 변경: U+ 투게더 결합 비교 리스트 -->
     <div class="section">
-        <div class="section-title" style="color:var(--uplus-magenta)">🚀 [변경 후] U+ 투게더 결합</div>
+        <div class="section-title">
+            <span style="color:var(--uplus-magenta)">🚀 [변경 후] U+ 투게더 결합</span>
+            <div class="toggle-group">
+                <input type="radio" id="togEqual" name="togType" value="equal" checked onchange="calculate()">
+                <label for="togEqual">균등할인</label>
+                <input type="radio" id="togShare" name="togType" value="share" onchange="calculate()">
+                <label for="togShare">나눔할인</label>
+            </div>
+        </div>
         <div class="horizontal-scroll" id="togList"></div>
     </div>
 
-    <div class="section" style="border:none; padding-bottom: 150px; font-size: 11px; color: #999; line-height: 1.6;">
-        * 모든 계산에는 선택약정, 프리미어 약정 및 복지할인 로직이 포함되어 있습니다.<br>
-        * 기초(주거/차상위) 및 장애인 할인 산식은 유플러스 최신 기준을 따릅니다.<br>
-        * 결합할인은 인원수와 요금제 허들 충족 여부에 따라 자동 계산됩니다.
-    </div>
+    <div class="section" style="border:none; padding-bottom: 100px; font-size: 11px; color: #999; line-height: 1.6;">
+        * 참 쉬운 결합 프리미어 약정할인은 85,000원 이상 입력 시 선택창 활성화됩니다.<br>
+        * 시그니처 할인은 월정액 130,000원 입력 시 선택창 활성화됩니다. <br>
+        </div>
 
     <!-- 결과 요약 하단 바 -->
-    <div class="bottom-sheet">
-        <div class="saving-stack">
-            <div class="saving-row main">
-                <span class="label">가족 최종 요금 변화(모바일+인터넷)</span>
-                <span class="amount" id="finalSaving">0원</span>
-            </div>
-        </div>
-        
-        <div class="btn-group">
+    <div class="bottom-sheet" style="padding: 15px 20px;">
+        <div class="btn-group" style="margin-top: 0;">
             <button class="cta-btn secondary" onclick="openCompareModal()">
                 📊 한눈에 비교표 보기
-            </button>
-            <button class="cta-btn" onclick="sendResult()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 18H4V4h16v16zM6 9h12v2H6zm0 4h8v2H6z"/></svg>
-                데이터 문자발송
             </button>
         </div>
     </div>
@@ -227,21 +245,26 @@
                 <h2>U+ 가족 결합 요금 비교표</h2>
                 <button class="modal-close" onclick="closeCompareModal()">×</button>
             </div>
-            <div class="modal-body" id="captureArea">
-                <div class="compare-section">
-                    <div class="compare-section-title">📊 [현재] 참 쉬운 가족 결합</div>
-                    <div class="compare-grid" id="modalEasyGrid"></div>
+            <div class="modal-body">
+                <div id="captureArea" style="background:#fff; padding:10px; border-radius:8px;">
+                    <div class="compare-section">
+                        <div class="compare-section-title">📊 [현재] 참 쉬운 가족 결합</div>
+                        <div class="compare-grid" id="modalEasyGrid"></div>
+                    </div>
+                    <div class="compare-section tog">
+                        <div class="compare-section-title">🚀 [변경 후] U+ 투게더 결합</div>
+                        <div class="compare-grid" id="modalTogGrid"></div>
+                    </div>
+                    <div class="modal-summary">
+                        <span class="label">가족 최종 요금 변화(모바일+인터넷)</span>
+                        <span class="amount" id="modalSummaryAmount">0원</span>
+                    </div>
                 </div>
-                <div class="compare-section tog">
-                    <div class="compare-section-title">🚀 [변경 후] U+ 투게더 결합</div>
-                    <div class="compare-grid" id="modalTogGrid"></div>
-                </div>
-                <div class="modal-summary">
-                    <span class="label">가족 최종 요금 변화(모바일+인터넷)</span>
-                    <span class="amount" id="modalSummaryAmount">0원</span>
-                </div>
-                <div style="text-align: center; margin-top: 15px; font-size: 11px; color: #999;">
-                    * 이 화면을 캡처하여 고객님께 공유해 보세요.
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="cta-btn secondary" onclick="downloadImage()" style="display: inline-flex; width: auto; padding: 12px 24px; font-size: 14px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width:18px; height:18px; fill:white; margin-right:6px;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                        이미지 다운
+                    </button>
                 </div>
             </div>
         </div>
@@ -250,6 +273,7 @@
 
 <script>
     let members = [];
+    let isEasyOne = false;
 
     window.onload = function() {
         addMember(); // 나
@@ -269,7 +293,10 @@
             curPremier: 'none',
             tarPlan: 85000,
             tarContract: 'selective',
-            tarPremier: 'apply'
+            tarPremier: 'apply',
+            manualTogDisc: 0,
+            easySigTarget: 'none',
+            togSigTarget: 'none'
         });
         calculate();
     }
@@ -290,6 +317,13 @@
             const easyEl = document.getElementById(`easyName_${index}`);
             if (easyEl) easyEl.value = value;
         }
+        
+        // 시그니처할인 지정 드롭다운 목록의 이름도 실시간 업데이트
+        const targetId = members[index].id;
+        const optionText = value || '가족';
+        document.querySelectorAll(`option[value="${targetId}"]`).forEach(opt => {
+            opt.textContent = optionText;
+        });
     }
 
     function updateMember(index, key, value) {
@@ -308,12 +342,20 @@
         calculate();
     }
 
+    function toggleEasyOne(checked) {
+        isEasyOne = checked;
+        calculate();
+    }
+
     function calculate() {
         const activeElementId = document.activeElement ? document.activeElement.id : null;
 
         const speed = document.getElementById('internetSpeed').value;
         const intBase = speed === 'none' ? 0 : (parseInt(document.getElementById('internetBasePrice').value) || 33000);
         const familyMemberCount = members.length;
+        
+        const togTypeElement = document.querySelector('input[name="togType"]:checked');
+        const togType = togTypeElement ? togTypeElement.value : 'equal';
         
         let togEligibleCount = members.filter(m => parseInt(m.tarPlan) >= 85000).length;
 
@@ -326,22 +368,56 @@
         let easyHtml = "";
         let togHtml = "";
 
+        // 시그니처 33,000원 할인 사전 계산 로직
+        let easySigDiscounts = new Array(members.length).fill(0);
+        let togSigDiscounts = new Array(members.length).fill(0);
+
+        members.forEach(m => {
+            if (parseInt(m.curPlan) === 130000 && m.easySigTarget !== 'none') {
+                const targetIdx = members.findIndex(mem => mem.id == m.easySigTarget);
+                if (targetIdx !== -1) easySigDiscounts[targetIdx] += 33000;
+            }
+            if (parseInt(m.tarPlan) === 130000 && m.togSigTarget !== 'none') {
+                const targetIdx = members.findIndex(mem => mem.id == m.togSigTarget);
+                if (targetIdx !== -1) togSigDiscounts[targetIdx] += 33000;
+            }
+        });
+
+        // 참쉬운 결합 총 할인금액 사전 계산
+        let totalEasyDiscSum = 0;
+        members.forEach(m => {
+            let p = parseInt(m.curPlan);
+            if (familyMemberCount === 2) totalEasyDiscSum += (p >= 88000) ? 4400 : (p >= 69000 ? 3300 : 2200);
+            else if (familyMemberCount === 3) totalEasyDiscSum += (p >= 88000) ? 6600 : (p >= 69000 ? 5500 : 3300);
+            else if (familyMemberCount >= 4) totalEasyDiscSum += (p >= 88000) ? 8800 : (p >= 69000 ? 6600 : 4400);
+        });
+
         members.forEach((m, i) => {
             // --- 1. 참 쉬운 가족 결합 (현재) 계산 ---
             let curPrice = parseInt(m.curPlan);
             let curEasyDisc = 0;
+            let standardDisc = 0;
+            
             if (familyMemberCount === 2) {
-                curEasyDisc = (curPrice >= 88000) ? 4400 : (curPrice >= 69000 ? 3300 : 2200);
+                standardDisc = (curPrice >= 88000) ? 4400 : (curPrice >= 69000 ? 3300 : 2200);
             } else if (familyMemberCount === 3) {
-                curEasyDisc = (curPrice >= 88000) ? 6600 : (curPrice >= 69000 ? 5500 : 3300);
+                standardDisc = (curPrice >= 88000) ? 6600 : (curPrice >= 69000 ? 5500 : 3300);
             } else if (familyMemberCount >= 4) {
-                curEasyDisc = (curPrice >= 88000) ? 8800 : (curPrice >= 69000 ? 6600 : 4400);
+                standardDisc = (curPrice >= 88000) ? 8800 : (curPrice >= 69000 ? 6600 : 4400);
             }
 
+            if (isEasyOne) {
+                curEasyDisc = (i === 0) ? totalEasyDiscSum : 0;
+            } else {
+                curEasyDisc = standardDisc;
+            }
+            
+            let curYouthSigDisc = easySigDiscounts[i];
+
             let curSelective = m.curContract === 'selective' ? curPrice * 0.25 : 0;
-            let curPremier = m.curPremier === 'apply' ? 5250 : 0;
-            let curRemaining = curPrice - curSelective - curEasyDisc - curPremier;
-            let curDisabledBase = curPrice - curEasyDisc; 
+            let curPremier = (m.curPremier === 'apply' && curPrice >= 85000) ? 5250 : 0;
+            let curRemaining = curPrice - curSelective - curEasyDisc - curYouthSigDisc - curPremier;
+            let curDisabledBase = curPrice - curEasyDisc - curYouthSigDisc; 
             
             let curFinal = applyWelfareLogic(curRemaining, curDisabledBase, m.welfare, curPrice);
             mobileEasyTotal += curFinal;
@@ -350,6 +426,12 @@
                 <div class="member-col current">
                     <div class="col-header">
                         <input type="text" id="easyName_${i}" value="${m.name}" oninput="updateName(${i}, this.value, 'easy')" class="name-input">
+                        ${i === 0 ? `
+                            <div style="display:flex; align-items:center; gap:3px; margin-left:auto; margin-right:4px;">
+                                <input type="checkbox" id="easyOneCheck" onchange="toggleEasyOne(this.checked)" style="width:12px; height:12px; margin:0; cursor:pointer;" ${isEasyOne ? 'checked' : ''}>
+                                <label for="easyOneCheck" style="margin:0; font-size:10px; color:var(--uplus-magenta); cursor:pointer;">1인지정</label>
+                            </div>
+                        ` : ''}
                         ${i>0?`<button class="btn-remove" onclick="removeMember(${i})">✕</button>`:''}
                     </div>
                     <div class="inline-select-row">
@@ -366,19 +448,30 @@
                         </select>
                     </div>
                     <label>월정액</label>
-                    <input type="number" id="curPlan_${i}" value="${m.curPlan}" oninput="updateMember(${i}, 'curPlan', this.value)">
+                    <input type="number" id="curPlan_${i}" value="${m.curPlan}" step="1000" oninput="updateMember(${i}, 'curPlan', this.value)">
                     <label style="margin-top:8px;">약정형태</label>
                     <select id="curContract_${i}" onchange="updateMember(${i}, 'curContract', this.value)">
                         <option value="selective" ${m.curContract==='selective'?'selected':''}>선약(25%)</option>
                         <option value="grant" ${m.curContract==='grant'?'selected':''}>공시/무약정</option>
                     </select>
-                    <label style="margin-top:8px;">프리미어약정</label>
-                    <select id="curPremier_${i}" onchange="updateMember(${i}, 'curPremier', this.value)">
+                    <label style="margin-top:8px; display:${curPrice >= 85000 ? 'block' : 'none'};">프리미어약정</label>
+                    <select id="curPremier_${i}" onchange="updateMember(${i}, 'curPremier', this.value)" style="display:${curPrice >= 85000 ? 'block' : 'none'};">
                         <option value="none" ${m.curPremier==='none'?'selected':''}>미적용</option>
                         <option value="apply" ${m.curPremier==='apply'?'selected':''}>적용(-5,250)</option>
                     </select>
                     <label style="margin-top:8px;">결합할인</label>
-                    <div id="easyDiscDisplay_${i}" class="discount-display">-${curEasyDisc.toLocaleString()}원</div>
+                    <div id="easyDiscDisplay_${i}" class="discount-display" ${parseInt(m.curPlan) === 130000 || curYouthSigDisc > 0 ? 'style="padding-bottom:0;"' : ''}>-${curEasyDisc.toLocaleString()}원</div>
+                    ${parseInt(m.curPlan) === 130000 ? `
+                        <label style="margin-top:8px;">시그니처할인 지정</label>
+                        <select id="easySigTarget_${i}" onchange="updateMember(${i}, 'easySigTarget', this.value)">
+                            <option value="none" ${m.easySigTarget === 'none' ? 'selected' : ''}>미지정</option>
+                            ${members.filter(mem => mem.id !== m.id).map((mem) => `<option value="${mem.id}" ${m.easySigTarget == mem.id ? 'selected' : ''}>${mem.name || '가족'}</option>`).join('')}
+                        </select>
+                    ` : ''}
+                    ${curYouthSigDisc > 0 ? `
+                        <label style="margin-top:8px;">청소년/시그니처할인</label>
+                        <div id="easyYouthDiscDisplay_${i}" class="discount-display" style="padding-bottom:0;">-${curYouthSigDisc.toLocaleString()}원</div>
+                    ` : `<div id="easyYouthDiscDisplay_${i}" style="display:none;">-0원</div>`}
                     <div class="col-footer">
                         <div style="margin-bottom: 4px;">
                             <span style="font-size:13px; color:#666; margin-right:4px; font-weight:700;">월 요금</span>
@@ -391,19 +484,30 @@
             // --- 2. 투게더 결합 (변경 후) 계산 ---
             let tarPrice = parseInt(m.tarPlan);
             let tarTogDisc = 0;
-            if (tarPrice >= 85000 && togEligibleCount >= 2) {
-                tarTogDisc = togEligibleCount >= 4 ? 20000 : (togEligibleCount === 3 ? 14000 : 10000);
-                if (m.age === 'youth') tarTogDisc += 10000;
+            let tarYouthDisc = 0;
+            
+            if (togType === 'equal') {
+                if (tarPrice >= 85000 && togEligibleCount >= 2) {
+                    tarTogDisc = togEligibleCount >= 4 ? 20000 : (togEligibleCount === 3 ? 14000 : 10000);
+                    if (m.age === 'youth') tarYouthDisc = 10000;
+                } else {
+                    if (familyMemberCount === 2) tarTogDisc = (tarPrice >= 88000) ? 4400 : (tarPrice >= 69000 ? 3300 : 2200);
+                    else if (familyMemberCount === 3) tarTogDisc = (tarPrice >= 88000) ? 6600 : (tarPrice >= 69000 ? 5500 : 3300);
+                    else if (familyMemberCount >= 4) tarTogDisc = (tarPrice >= 88000) ? 8800 : (tarPrice >= 69000 ? 6600 : 4400);
+                }
             } else {
-                if (familyMemberCount === 2) tarTogDisc = (tarPrice >= 88000) ? 4400 : (tarPrice >= 69000 ? 3300 : 2200);
-                else if (familyMemberCount === 3) tarTogDisc = (tarPrice >= 88000) ? 6600 : (tarPrice >= 69000 ? 5500 : 3300);
-                else if (familyMemberCount >= 4) tarTogDisc = (tarPrice >= 88000) ? 8800 : (tarPrice >= 69000 ? 6600 : 4400);
+                tarTogDisc = parseInt(m.manualTogDisc) || 0;
+                if (tarPrice >= 85000 && togEligibleCount >= 2 && m.age === 'youth') {
+                    tarYouthDisc = 10000;
+                }
             }
+            
+            tarYouthDisc += togSigDiscounts[i];
 
             let tarSelective = m.tarContract === 'selective' ? tarPrice * 0.25 : 0;
             let tarPremier = m.tarPremier === 'apply' ? 5250 : 0;
-            let tarRemaining = tarPrice - tarSelective - tarTogDisc - tarPremier;
-            let tarDisabledBase = tarPrice - tarTogDisc; 
+            let tarRemaining = tarPrice - tarSelective - tarTogDisc - tarYouthDisc - tarPremier;
+            let tarDisabledBase = tarPrice - tarTogDisc - tarYouthDisc; 
             
             let tarFinal = applyWelfareLogic(tarRemaining, tarDisabledBase, m.welfare, tarPrice);
             mobileTogTotal += tarFinal;
@@ -415,11 +519,11 @@
                     <div class="col-header">
                         <input type="text" id="togName_${i}" value="${m.name}" oninput="updateName(${i}, this.value, 'tog')" class="name-input">
                         <div style="font-size:10px; color:var(--uplus-magenta); font-weight:normal;">
-                            ${m.age==='youth'?'학생':'성인'} / ${m.welfare==='none'?'일반':'복지'}
+                            ${m.age==='youth'?'청소년':'성인'} / ${m.welfare==='none'?'일반':'복지'}
                         </div>
                     </div>
                     <label>월정액</label>
-                    <input type="number" id="tarPlan_${i}" value="${m.tarPlan}" oninput="updateMember(${i}, 'tarPlan', this.value)">
+                    <input type="number" id="tarPlan_${i}" value="${m.tarPlan}" step="1000" oninput="updateMember(${i}, 'tarPlan', this.value)" onblur="if(this.value < 85000 || this.value === '') updateMember(${i}, 'tarPlan', 85000)">
                     <label style="margin-top:8px;">약정형태</label>
                     <select id="tarContract_${i}" onchange="updateMember(${i}, 'tarContract', this.value)">
                         <option value="selective" ${m.tarContract==='selective'?'selected':''}>선약(25%)</option>
@@ -431,7 +535,22 @@
                         <option value="apply" ${m.tarPremier==='apply'?'selected':''}>적용(-5,250)</option>
                     </select>
                     <label style="margin-top:8px;">결합할인</label>
-                    <div id="togDiscDisplay_${i}" class="discount-display">-${tarTogDisc.toLocaleString()}원</div>
+                    ${togType === 'share' ? 
+                        `<input type="number" id="manualTogDisc_${i}" value="${m.manualTogDisc !== undefined ? m.manualTogDisc : 0}" step="1000" onfocus="if(this.value=='0') this.value='';" onblur="if(this.value=='') { this.value='0'; updateMember(${i}, 'manualTogDisc', 0); }" oninput="updateMember(${i}, 'manualTogDisc', this.value)" class="manual-input" placeholder="0">
+                         <div id="togDiscDisplay_${i}" style="display:none;">-${tarTogDisc.toLocaleString()}원</div>` : 
+                        `<div id="togDiscDisplay_${i}" class="discount-display" style="padding-bottom:0;">-${tarTogDisc.toLocaleString()}원</div>`
+                    }
+                    ${parseInt(m.tarPlan) === 130000 ? `
+                        <label style="margin-top:8px;">시그니처할인 지정</label>
+                        <select id="togSigTarget_${i}" onchange="updateMember(${i}, 'togSigTarget', this.value)">
+                            <option value="none" ${m.togSigTarget === 'none' ? 'selected' : ''}>미지정</option>
+                            ${members.filter(mem => mem.id !== m.id).map((mem) => `<option value="${mem.id}" ${m.togSigTarget == mem.id ? 'selected' : ''}>${mem.name || '가족'}</option>`).join('')}
+                        </select>
+                    ` : ''}
+                    ${tarYouthDisc > 0 ? `
+                        <label style="margin-top:8px;">청소년/시그니처할인</label>
+                        <div id="togYouthDiscDisplay_${i}" class="discount-display" style="padding-bottom:0;">-${tarYouthDisc.toLocaleString()}원</div>
+                    ` : `<div id="togYouthDiscDisplay_${i}" style="display:none;">-0원</div>`}
                     <div class="col-footer">
                         <div style="margin-bottom: 4px;">
                             <span style="font-size:13px; color:#666; margin-right:4px; font-weight:700;">월 요금</span>
@@ -461,28 +580,30 @@
         let intEasyFinal = Math.max(0, intBase - intDiscEasy);
         let intTogFinal = Math.max(0, intBase - intDiscTog);
 
-        // --- 4. 요약 바 업데이트 ---
+        // --- 4. 요약 바 업데이트 및 전역 변수 저장 (모달/문자용) ---
         const finalDiff = (mobileTogTotal + intTogFinal) - (mobileEasyTotal + intEasyFinal);
-        const finalEl = document.getElementById('finalSaving');
+        
+        let finalSavingText = "0원 (변동 없음)";
+        let finalSavingColor = "#ccc";
         
         if (finalDiff < 0) {
-            finalEl.innerText = "- " + Math.abs(Math.floor(finalDiff)).toLocaleString() + "원 절감";
-            finalEl.style.color = "var(--decrease-blue)";
+            finalSavingText = "- " + Math.abs(Math.floor(finalDiff)).toLocaleString() + "원 절감";
+            finalSavingColor = "var(--decrease-blue)";
         } else if (finalDiff > 0) {
-            finalEl.innerText = "+ " + Math.abs(Math.floor(finalDiff)).toLocaleString() + "원 증감";
-            finalEl.style.color = "var(--increase-red)";
-        } else {
-            finalEl.innerText = "0원 (변동 없음)";
-            finalEl.style.color = "#ccc";
+            finalSavingText = "+ " + Math.abs(Math.floor(finalDiff)).toLocaleString() + "원 증감";
+            finalSavingColor = "var(--increase-red)";
         }
+        
+        window.currentFinalSavingText = finalSavingText;
+        window.currentFinalSavingColor = finalSavingColor;
 
         // 포커스(커서) 복구 로직 (숫자 입력 등 이름 외의 필드용)
-        if (activeElementId && !activeElementId.includes('Name_')) {
+        if (activeElementId && !activeElementId.includes('Name_') && !activeElementId.includes('easyOneCheck')) {
             const el = document.getElementById(activeElementId);
             if (el) {
                 el.focus();
                 // input 필드일 경우 커서를 맨 끝으로 이동
-                if (el.tagName === 'INPUT') {
+                if (el.tagName === 'INPUT' && el.type !== 'checkbox' && el.type !== 'radio') {
                     const val = el.value;
                     el.value = '';
                     el.value = val;
@@ -518,27 +639,31 @@
         members.forEach((m, i) => {
             const nameStr = m.name || `가족 ${i+1}`;
             
-            // Text values from DOM
-            const easyResText = document.getElementById(`easyRes_${i}`) ? document.getElementById(`easyRes_${i}`).innerText : '0원';
-            const togResText = document.getElementById(`togRes_${i}`) ? document.getElementById(`togRes_${i}`).innerText : '0원';
-            const easyDiscText = document.getElementById(`easyDiscDisplay_${i}`) ? document.getElementById(`easyDiscDisplay_${i}`).innerText : '-0원';
-            const togDiscText = document.getElementById(`togDiscDisplay_${i}`) ? document.getElementById(`togDiscDisplay_${i}`).innerText : '-0원';
+            // Text values from DOM (using textContent to reliably read hidden elements)
+            const easyResText = document.getElementById(`easyRes_${i}`) ? document.getElementById(`easyRes_${i}`).textContent : '0원';
+            const easyYouthDiscText = document.getElementById(`easyYouthDiscDisplay_${i}`) ? document.getElementById(`easyYouthDiscDisplay_${i}`).textContent : '-0원';
+            const togResText = document.getElementById(`togRes_${i}`) ? document.getElementById(`togRes_${i}`).textContent : '0원';
+            const easyDiscText = document.getElementById(`easyDiscDisplay_${i}`) ? document.getElementById(`easyDiscDisplay_${i}`).textContent : '-0원';
+            const togDiscText = document.getElementById(`togDiscDisplay_${i}`) ? document.getElementById(`togDiscDisplay_${i}`).textContent : '-0원';
+            const togYouthDiscText = document.getElementById(`togYouthDiscDisplay_${i}`) ? document.getElementById(`togYouthDiscDisplay_${i}`).textContent : '-0원';
             
             const easyFinalPrice = parseInt(easyResText.replace(/[^0-9]/g, '')) || 0;
             const togFinalPrice = parseInt(togResText.replace(/[^0-9]/g, '')) || 0;
             
             const easyFamDisc = parseInt(easyDiscText.replace(/[^0-9]/g, '')) || 0;
+            const easyYouthDisc = parseInt(easyYouthDiscText.replace(/[^0-9]/g, '')) || 0;
             const togFamDisc = parseInt(togDiscText.replace(/[^0-9]/g, '')) || 0;
+            const togYouthDisc = parseInt(togYouthDiscText.replace(/[^0-9]/g, '')) || 0;
 
             const easyPlan = parseInt(m.curPlan) || 0;
             const easySel = m.curContract === 'selective' ? easyPlan * 0.25 : 0;
-            const easyPre = m.curPremier === 'apply' ? 5250 : 0;
-            const easyWelfare = easyPlan - easySel - easyPre - easyFamDisc - easyFinalPrice;
+            const easyPre = (m.curPremier === 'apply' && easyPlan >= 85000) ? 5250 : 0;
+            const easyWelfare = easyPlan - easySel - easyPre - easyFamDisc - easyYouthDisc - easyFinalPrice;
 
             const togPlan = parseInt(m.tarPlan) || 0;
             const togSel = m.tarContract === 'selective' ? togPlan * 0.25 : 0;
-            const togPre = m.tarPremier === 'apply' ? 5250 : 0;
-            const togWelfare = togPlan - togSel - togPre - togFamDisc - togFinalPrice;
+            const togPre = (m.tarPremier === 'apply' && togPlan >= 85000) ? 5250 : 0;
+            const togWelfare = togPlan - togSel - togPre - togFamDisc - togYouthDisc - togFinalPrice;
             
             // 개인별 요금 증감 계산
             const indivDiff = togFinalPrice - easyFinalPrice;
@@ -557,8 +682,9 @@
                     <div class="name">${nameStr}</div>
                     <div class="row"><span class="prefix">요금제</span><span class="plan-num">${easyPlan.toLocaleString()}원</span></div>
                     <div class="row"><span class="prefix">선택약정</span><span class="disc-num">-${easySel.toLocaleString()}원</span></div>
-                    <div class="row"><span class="prefix">프리미어약정</span><span class="disc-num">-${easyPre.toLocaleString()}원</span></div>
+                    ${easyPre > 0 ? `<div class="row"><span class="prefix">프리미어약정</span><span class="disc-num">-${easyPre.toLocaleString()}원</span></div>` : ''}
                     <div class="row"><span class="prefix">결합할인</span><span class="disc-num">-${easyFamDisc.toLocaleString()}원</span></div>
+                    ${easyYouthDisc > 0 ? `<div class="row"><span class="prefix">청소년/시그니처할인</span><span class="disc-num magenta">-${easyYouthDisc.toLocaleString()}원</span></div>` : ''}
                     ${easyWelfare > 0 ? `<div class="row"><span class="prefix">복지할인</span><span class="disc-num">-${easyWelfare.toLocaleString()}원</span></div>` : ''}
                     <div class="res-row"><span class="prefix" style="color:#666;">월요금</span><span class="res-num">${easyResText}</span></div>
                 </div>
@@ -569,8 +695,9 @@
                     <div class="name">${nameStr}</div>
                     <div class="row"><span class="prefix">요금제</span><span class="plan-num">${togPlan.toLocaleString()}원</span></div>
                     <div class="row"><span class="prefix">선택약정</span><span class="disc-num">-${togSel.toLocaleString()}원</span></div>
-                    <div class="row"><span class="prefix">프리미어약정</span><span class="disc-num">-${togPre.toLocaleString()}원</span></div>
+                    ${togPre > 0 ? `<div class="row"><span class="prefix">프리미어약정</span><span class="disc-num">-${togPre.toLocaleString()}원</span></div>` : ''}
                     <div class="row"><span class="prefix">결합할인</span><span class="disc-num magenta">-${togFamDisc.toLocaleString()}원</span></div>
+                    ${togYouthDisc > 0 ? `<div class="row"><span class="prefix">청소년/시그니처할인</span><span class="disc-num magenta">-${togYouthDisc.toLocaleString()}원</span></div>` : ''}
                     ${togWelfare > 0 ? `<div class="row"><span class="prefix">복지할인</span><span class="disc-num">-${togWelfare.toLocaleString()}원</span></div>` : ''}
                     <div class="res-row"><span class="prefix" style="color:#666;">월요금</span><span class="res-num">${togResText}</span></div>
                     ${diffHtml}
@@ -581,9 +708,8 @@
         easyContainer.innerHTML = easyHtml;
         togContainer.innerHTML = togHtml;
 
-        const finalSavingEl = document.getElementById('finalSaving');
-        summary.innerText = finalSavingEl.innerText;
-        summary.style.color = finalSavingEl.style.color;
+        summary.innerText = window.currentFinalSavingText || "0원";
+        summary.style.color = window.currentFinalSavingColor || "#ccc";
 
         document.getElementById('compareModal').style.display = 'flex';
     }
@@ -592,43 +718,21 @@
         document.getElementById('compareModal').style.display = 'none';
     }
 
-    // 데이터 정리 및 문자 발송 로직
-    function sendResult() {
-        const speedText = document.getElementById('internetSpeed').options[document.getElementById('internetSpeed').selectedIndex].text;
-        const finalSavingText = document.getElementById('finalSaving').innerText;
-
-        let msg = "[U+ 결합 요금 시뮬레이션]\n\n";
-        msg += `■ 인터넷: ${speedText}\n`;
-        msg += `■ 요금 변화: 기존 대비 ${finalSavingText}\n\n`;
-
-        msg += `■ 구성원 상세 (총 ${members.length}명)\n`;
-
-        members.forEach((m, i) => {
-            const ageStr = m.age === 'adult' ? '성인' : '학생';
-            const welMap = {none:'일반', basic1:'생계/의료', basic2:'주거/차상위', senior:'기초연금', disabled:'장애인/유공자'};
-            const welStr = welMap[m.welfare];
-
-            const curContStr = m.curContract === 'selective' ? '선약' : '공시';
-            const curPreStr = m.curPremier === 'apply' ? '프리미어O' : 'X';
-            const tarContStr = m.tarContract === 'selective' ? '선약' : '공시';
-            const tarPreStr = m.tarPremier === 'apply' ? '프리미어O' : 'X';
-
-            const curRes = document.getElementById(`easyRes_${i}`) ? document.getElementById(`easyRes_${i}`).innerText : '0원';
-            const tarRes = document.getElementById(`togRes_${i}`) ? document.getElementById(`togRes_${i}`).innerText : '0원';
-            const tarDiscText = document.getElementById(`togDiscDisplay_${i}`) ? document.getElementById(`togDiscDisplay_${i}`).innerText : '-0원';
-            
-            const nameStr = m.name || `구성원 ${i+1}`;
-
-            msg += `[${nameStr} | ${ageStr} | ${welStr}]\n`;
-            msg += `- 참쉬운: ${parseInt(m.curPlan).toLocaleString()}원(${curContStr}/${curPreStr}) -> ${curRes}\n`;
-            msg += `- 투게더: ${parseInt(m.tarPlan).toLocaleString()}원(${tarContStr}/${tarPreStr}/결합${tarDiscText}) -> ${tarRes}\n\n`;
-        });
-
-        // ★ 담당자 번호 입력 부분 ★
-        const targetPhone = "010-8080-5301"; // 여기에 실제 수신받을 담당자 번호를 입력하세요!
+    // --- 이미지 다운로드 로직 ---
+    function downloadImage() {
+        const captureDiv = document.getElementById('captureArea');
         
-        const smsLink = `sms:${targetPhone}?body=${encodeURIComponent(msg)}`;
-        window.location.href = smsLink;
+        // 고해상도로 화면 영역 캡처
+        html2canvas(captureDiv, {
+            scale: 2, 
+            backgroundColor: "#ffffff",
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Uplus_요금비교표.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
     }
 </script>
 
